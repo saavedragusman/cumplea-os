@@ -837,6 +837,31 @@ function Manada({ onRoar }) {
   const [name, setName] = useState('')
   const [count, setCount] = useState(1)
   const [justAdded, setJustAdded] = useState(null)
+  const [syncing, setSyncing] = useState(true)
+
+  /* Sync from Google Sheets on mount — fallback a localStorage si la API no responde */
+  useEffect(() => {
+    fetch('/api/manada')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.entries?.length > 0) {
+          const apiPack = data.entries.map((e) => ({
+            name: e.nombre,
+            count: e.personas,
+          }))
+          setPack(apiPack)
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(apiPack))
+          } catch {
+            /* no problem */
+          }
+        }
+      })
+      .catch(() => {
+        /* API no disponible — mantener datos locales */
+      })
+      .finally(() => setSyncing(false))
+  }, [])
 
   useEffect(() => {
     try {
@@ -854,6 +879,16 @@ function Manada({ onRoar }) {
     const clean = name.trim()
     if (!clean) return
     const entry = { name: clean, count }
+
+    /* POST a la API (fire-and-forget, no bloquea la UX) */
+    fetch('/api/manada', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: clean, personas: count }),
+    }).catch(() => {
+      /* API no disponible — guardado localmente igual */
+    })
+
     setPack((prev) => [...prev, entry])
     setJustAdded(entry)
     setName('')
@@ -879,10 +914,14 @@ function Manada({ onRoar }) {
             Confirmados
           </p>
           <p className="mt-1 font-display text-7xl font-bold text-white tabular-nums drop-shadow">
-            {totalPeople}
+            {syncing ? (
+              <span className="inline-block animate-pulse text-5xl opacity-60">—</span>
+            ) : (
+              totalPeople
+            )}
           </p>
           <p className="mt-1 font-display text-lg font-semibold text-cream/90">
-            {families} {families === 1 ? 'familia' : 'familias'} en la manada
+            {syncing ? 'Cargando…' : `${families} ${families === 1 ? 'familia' : 'familias'} en la manada`}
           </p>
         </div>
       </Reveal>
@@ -973,43 +1012,49 @@ export default function App() {
   const bgRef = useRef(null)
   const roarRef = useRef(null)
 
-  /* Initialize audio elements once and autoplay background music */
+  /* Initialize audio elements once and wait for user gesture to play */
   useEffect(() => {
     const bg = new Audio('/images/ciclo.mp3')
     bg.loop = true
     bg.volume = 0.25
+    bg.preload = 'auto'
 
     const roar = new Audio('/images/rugido.mp3')
     roar.volume = 0.6
+    roar.preload = 'auto'
 
     bgRef.current = bg
     roarRef.current = roar
 
-    /* First try autoplay — browsers block audio without a user gesture */
-    let unlock = null
-    bg.play()
-      .then(() => setShowTapHint(false))
-      .catch(() => {
-        /* Blocked → show the tap hint and unlock on the FIRST tap/click
-           anywhere. Capture phase (true) so it fires before any child
-           stopPropagation. */
-        setShowTapHint(true)
-        unlock = () => {
+    /* No autoplay attempt — browsers always block it today.
+       Instead, show the tap hint and unlock on the FIRST click/tap
+       anywhere. Capture phase (true) so it fires before any child
+       stopPropagation. Use 'click' because it is the most reliable
+       event for user-activation-gated playback across all browsers. */
+    setShowTapHint(true)
+
+    const unlock = () => {
+      bg.play()
+        .then(() => {
+          setShowTapHint(false)
+          setMuted(false)
+        })
+        .catch(() => {
+          /* On some browsers the audio element may need a fresh load. */
+          bg.load()
           bg.play().catch(() => {})
           setShowTapHint(false)
           setMuted(false)
-          window.removeEventListener('pointerdown', unlock, true)
-          window.removeEventListener('keydown', unlock, true)
-        }
-        window.addEventListener('pointerdown', unlock, true)
-        window.addEventListener('keydown', unlock, true)
-      })
+        })
+      window.removeEventListener('click', unlock, true)
+      window.removeEventListener('keydown', unlock, true)
+    }
+    window.addEventListener('click', unlock, true)
+    window.addEventListener('keydown', unlock, true)
 
     return () => {
-      if (unlock) {
-        window.removeEventListener('pointerdown', unlock, true)
-        window.removeEventListener('keydown', unlock, true)
-      }
+      window.removeEventListener('click', unlock, true)
+      window.removeEventListener('keydown', unlock, true)
       bg.pause()
       bg.src = ''
       roar.pause()
