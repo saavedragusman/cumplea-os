@@ -499,7 +499,7 @@ function Countdown() {
       <SectionHeader
         badge="Cuenta regresiva"
         badgeIcon={<ClockIcon className="h-4 w-4" />}
-        title="Falta cada vez menos"
+        title="Cada vez falta menos"
         subtitle="El rugido más esperado del año está por llegar."
       />
       <Reveal delay={120}>
@@ -588,6 +588,15 @@ function HowToArrive() {
 
 function Lightbox({ images, index, onClose, onNav }) {
   const open = index !== null
+  const touchX = useRef(null)
+  const prevIdx = useRef(index)
+  const dirRef = useRef(0)
+
+  /* Track swipe direction synchronously during render so the animation class
+     is correct on the very first frame after the index changes. */
+  if (open && index !== null && prevIdx.current !== null && index !== prevIdx.current) {
+    dirRef.current = index > prevIdx.current ? 1 : -1
+  }
 
   useEffect(() => {
     if (!open) return
@@ -604,7 +613,39 @@ function Lightbox({ images, index, onClose, onNav }) {
     }
   }, [open, onClose, onNav])
 
+  /* Keep prevIdx in sync after render commits */
+  useEffect(() => {
+    if (open) prevIdx.current = index
+  }, [index, open])
+
+  const handleTouchStart = useCallback(
+    (e) => {
+      touchX.current = e.touches[0].clientX
+    },
+    [],
+  )
+
+  const handleTouchEnd = useCallback(
+    (e) => {
+      if (touchX.current === null) return
+      const diff = touchX.current - e.changedTouches[0].clientX
+      const threshold = 50
+      if (Math.abs(diff) > threshold) {
+        onNav(diff > 0 ? 1 : -1)
+      }
+      touchX.current = null
+    },
+    [onNav],
+  )
+
   if (!open) return null
+
+  const enterAnim =
+    dirRef.current === 0
+      ? 'animate-pop'
+      : dirRef.current > 0
+        ? 'animate-slide-from-right'
+        : 'animate-slide-from-left'
 
   return (
     <div
@@ -617,7 +658,7 @@ function Lightbox({ images, index, onClose, onNav }) {
       <button
         onClick={onClose}
         aria-label="Cerrar"
-        className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-2xl text-white transition hover:bg-white/30"
+        className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-2xl text-white transition hover:bg-white/30"
       >
         ✕
       </button>
@@ -627,27 +668,34 @@ function Lightbox({ images, index, onClose, onNav }) {
           onNav(-1)
         }}
         aria-label="Anterior"
-        className="absolute left-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/15 text-2xl text-white transition hover:bg-white/30 sm:left-6"
+        className="absolute left-3 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/15 text-2xl text-white transition hover:bg-white/30 sm:left-6"
       >
         ‹
       </button>
-      <img
-        src={images[index]}
-        alt={`Foto ${index + 1} de ${EVENT.honoreeShort}`}
+      <div
+        key={index}
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[82vh] max-w-full animate-pop rounded-2xl object-contain shadow-2xl ring-4 ring-white/20"
-      />
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className={`flex max-h-[82vh] max-w-full items-center justify-center ${enterAnim}`}
+      >
+        <img
+          src={images[index]}
+          alt={`Foto ${index + 1} de ${EVENT.honoreeShort}`}
+          className="max-h-[82vh] max-w-full rounded-2xl object-contain shadow-2xl ring-4 ring-white/20"
+        />
+      </div>
       <button
         onClick={(e) => {
           e.stopPropagation()
           onNav(1)
         }}
         aria-label="Siguiente"
-        className="absolute right-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/15 text-2xl text-white transition hover:bg-white/30 sm:right-6"
+        className="absolute right-3 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/15 text-2xl text-white transition hover:bg-white/30 sm:right-6"
       >
         ›
       </button>
-      <span className="absolute bottom-5 rounded-full bg-white/15 px-4 py-1 text-sm font-semibold text-white">
+      <span className="absolute bottom-5 z-10 rounded-full bg-white/15 px-4 py-1 text-sm font-semibold text-white">
         {index + 1} / {images.length}
       </span>
     </div>
@@ -1021,6 +1069,18 @@ export default function App() {
             </p>
             <p className="mt-2 text-sm text-maroon/60">
               Con amor, la familia de {EVENT.honoreeShort}
+            </p>
+            <p className="mt-6 text-xs font-display font-semibold tracking-wide text-rockspray/50">
+              Desarrollado con amor por{' '}
+              <a
+                href="https://wa.me/584147359020"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-willpower underline decoration-willpower/30 transition hover:decoration-willpower/80"
+              >
+                Gusman Saavedra
+              </a>{' '}
+              ❤️
             </p>
           </Reveal>
         </footer>
