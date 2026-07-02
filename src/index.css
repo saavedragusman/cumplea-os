@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+@theme {
+  /* Typography */
+  --font-display: "Fredoka", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Nunito", ui-sans-serif, system-ui, sans-serif;
+
+  /* Poster color scheme (vibrant) */
+  --color-blackrose: #1c0001;
+  --color-maroon: #6b120e;
+  --color-rockspray: #bb3d02;
+  --color-cadmium: #ff9b15;
+  --color-psychedelic: #fcf03c;
+  --color-willpower: #f95404;
+
+  /* Baby-friendly pastels (background) */
+  --color-cream: #fff8e7;
+  --color-butter: #fff3c4;
+  --color-mint: #e0f5e9;
+  --color-savanna: #f6c26b;
+
+  /* Entrance + ambient animations */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-sway: sway 5s ease-in-out infinite;
+  --animate-spin-slow: spin-slow 40s linear infinite;
+  --animate-ring: ring-spin 9s linear infinite;
+  --animate-glow: glow 5s ease-in-out infinite;
+  --animate-pop: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  --animate-shimmer: shimmer 3s linear infinite;
+  --animate-pulse-soft: pulse-soft 2.4s ease-in-out infinite;
+  --animate-hop: hop 2.6s ease-in-out infinite;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  @keyframes sway {
+    0%, 100% { transform: rotate(-6deg); }
+    50% { transform: rotate(6deg); }
+  }
+  @keyframes spin-slow {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes ring-spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes glow {
+    0%, 100% {
+      box-shadow: 0 0 34px 4px rgba(249, 84, 4, 0.55),
+                  0 0 78px 14px rgba(255, 155, 21, 0.35);
+    }
+    33% {
+      box-shadow: 0 0 34px 4px rgba(252, 240, 60, 0.55),
+                  0 0 78px 14px rgba(249, 84, 4, 0.35);
+    }
+    66% {
+      box-shadow: 0 0 34px 4px rgba(187, 61, 2, 0.6),
+                  0 0 78px 14px rgba(252, 240, 60, 0.35);
+    }
+  }
+  @keyframes pop {
+    0% { opacity: 0; transform: scale(0.7); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  @keyframes pulse-soft {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.06); opacity: 0.9; }
+  }
+  @keyframes hop {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    15% { transform: translateY(-28px) rotate(5deg); }
+    30% { transform: translateY(0) rotate(-3deg); }
+    45% { transform: translateY(-14px) rotate(2deg); }
+    60% { transform: translateY(0) rotate(-3deg); }
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Bulletproof gradient text (needs -webkit-text-fill-color to clip reliably) */
+.title-gradient {
+  background-image: linear-gradient(120deg, #f95404, #ff9b15, #bb3d02);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Soft dotted savanna texture layered behind the page */
+.savanna-grain {
+  background-image: radial-gradient(rgba(187, 61, 2, 0.06) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
