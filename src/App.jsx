@@ -15,15 +15,26 @@ const EVENT = {
   targetISO: '2026-08-01T15:00:00-04:00',
   mapsQuery: 'Colegio de Médicos Veterinarios del Zulia, Maracaibo',
   // Host WhatsApp number in international format WITHOUT "+" or spaces (e.g. 584121234567).
-  hostWhatsapp: '',
+  hostWhatsapp: '584246890902',
 }
 
-// Real photos of the little king.
-const KING_PHOTOS = [
-  '/images/gabriel1.webp',
-  '/images/gabriel3.webp',
-  ...Array.from({ length: 8 }, (_, i) => `/images/gallery/galeria${i + 1}.jpeg`),
-]
+// Gabriel photos — auto-loaded from src/assets/gabriel/ sorted by number
+const gabrielModules = import.meta.glob('/src/assets/gabriel/*.webp', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+})
+const KING_PHOTOS = Object.values(gabrielModules).sort(
+  (a, b) => (parseInt(a.match(/(\d+)/)?.[1] ?? '0')) - (parseInt(b.match(/(\d+)/)?.[1] ?? '0')),
+)
+
+// Family photos — auto-loaded from src/assets/familia/ sorted alphabetically
+const familiaModules = import.meta.glob('/src/assets/familia/*.webp', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+})
+const FAMILY_PHOTOS = Object.values(familiaModules).sort()
 
 const STORAGE_KEY = 'manada-gabriel-v1'
 
@@ -764,47 +775,81 @@ function KingGallery() {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  CIRCLE OF LIFE — character cards                                          */
+/*  CIRCLE OF LIFE — family photo gallery                                      */
 /* -------------------------------------------------------------------------- */
 
-const CIRCLE = [
-  { name: 'Simba', icon: LionCub, tint: 'from-cadmium/40 to-willpower/25' },
-  { name: 'Timón', icon: Meerkat, tint: 'from-psychedelic/50 to-cadmium/25' },
-  { name: 'Pumba', icon: Warthog, tint: 'from-rockspray/30 to-maroon/15' },
-  { name: 'Selva', icon: (p) => <Leaf {...p} className={`${p.className} text-[#5aab73]`} />, tint: 'from-mint to-mint/40' },
-  { name: 'Sabana', icon: Sun, tint: 'from-savanna/50 to-psychedelic/30' },
-  { name: 'Huella', icon: (p) => <Paw {...p} className={`${p.className} text-maroon`} />, tint: 'from-butter to-cadmium/20' },
-]
+const FAMILY_PREVIEW = 6
 
 function CircleOfLife() {
+  const [current, setCurrent] = useState(null)
+  const nav = useCallback(
+    (dir) =>
+      setCurrent((i) =>
+        i === null ? i : (i + dir + FAMILY_PHOTOS.length) % FAMILY_PHOTOS.length,
+      ),
+    [],
+  )
+
+  const preview = FAMILY_PHOTOS.slice(0, FAMILY_PREVIEW)
+  const hidden = FAMILY_PHOTOS.length - FAMILY_PREVIEW
+
   return (
     <section className="relative mt-24">
       <HopMascot className="-top-16 right-1 sm:right-6" delay="300ms" />
       <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-cadmium/25 via-butter to-mint/60 p-7 shadow-lg shadow-rockspray/10 ring-1 ring-white/60 sm:p-10">
         <Sun className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 animate-spin-slow opacity-20" />
+
+        {/* Timón (Meerkat) decorativo flotante */}
+        <div className="pointer-events-none absolute -left-6 -bottom-4 z-10 animate-float select-none opacity-40">
+          <Meerkat className="h-24 w-24 sm:h-28 sm:w-28" />
+        </div>
+
         <SectionHeader
           badge="Galería mágica"
           badgeIcon={<span aria-hidden="true">✨</span>}
           title="El círculo de la vida"
-          subtitle="Personajes y escenas que nos inspiran."
+          subtitle="Personajes y escenas que forman parte de mi vida."
         />
 
-        <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3">
-          {CIRCLE.map(({ name, icon: Icon, tint }, i) => (
-            <Reveal key={name} delay={(i % 3) * 90}>
-              <div
-                className={`group flex flex-col items-center rounded-3xl bg-gradient-to-br ${tint} p-6 shadow-md shadow-rockspray/10 ring-1 ring-white/60 backdrop-blur transition-transform duration-300 hover:-translate-y-1.5`}
-              >
-                <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-white/70 shadow-inner transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
-                  <Icon className="h-16 w-16" />
-                </div>
-                <p className="mt-4 font-display text-base font-bold uppercase tracking-wide text-maroon">
-                  {name}
-                </p>
-              </div>
-            </Reveal>
-          ))}
+        {/* Photo gallery grid — same layout as El pequeño rey */}
+        <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+          {preview.map((src, i) => {
+            const isLast = i === FAMILY_PREVIEW - 1 && hidden > 0
+            return (
+              <Reveal key={src} delay={(i % 3) * 90}>
+                <button
+                  onClick={() => setCurrent(i)}
+                  className="group relative block aspect-square w-full overflow-hidden rounded-2xl bg-white p-1.5 shadow-md shadow-rockspray/10 ring-1 ring-cadmium/20 transition duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-willpower focus:outline-none focus-visible:ring-4 focus-visible:ring-willpower"
+                  aria-label={isLast ? `Ver todas las fotos (${FAMILY_PHOTOS.length})` : `Ampliar foto ${i + 1}`}
+                >
+                  <img
+                    src={src}
+                    alt={`Foto familiar ${i + 1}`}
+                    loading="lazy"
+                    className="h-full w-full rounded-xl object-cover transition duration-500 group-hover:scale-110"
+                  />
+                  {isLast ? (
+                    <span className="pointer-events-none absolute inset-1.5 flex flex-col items-center justify-center rounded-xl bg-blackrose/55 text-white backdrop-blur-[1px] transition group-hover:bg-blackrose/65">
+                      <span className="font-display text-3xl font-bold">+{hidden}</span>
+                      <span className="mt-0.5 font-display text-xs font-semibold uppercase tracking-widest">
+                        Ver todas
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="pointer-events-none absolute inset-1.5 rounded-xl bg-gradient-to-t from-blackrose/40 to-transparent opacity-0 transition group-hover:opacity-100" />
+                  )}
+                </button>
+              </Reveal>
+            )
+          })}
         </div>
+
+        <Lightbox
+          images={FAMILY_PHOTOS}
+          index={current}
+          onClose={() => setCurrent(null)}
+          onNav={nav}
+        />
       </div>
     </section>
   )
@@ -1112,10 +1157,10 @@ export default function App() {
             <p className="font-display text-2xl font-semibold text-rockspray">
               ¡Te esperamos en la sabana! 🦁🌅
             </p>
-            <p className="mt-2 text-sm text-maroon/60">
+            <p className="mt-2 text-md text-maroon/60">
               Con amor, la familia de {EVENT.honoreeShort}
             </p>
-            <p className="mt-6 text-xs font-display font-semibold tracking-wide text-rockspray/50">
+            <p className="mt-6 text-sm font-display font-semibold tracking-wide text-rockspray/50">
               Desarrollado con amor por{' '}
               <a
                 href="https://wa.me/584147359020"
