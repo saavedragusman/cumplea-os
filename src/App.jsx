@@ -529,7 +529,7 @@ function Countdown() {
   const { days, hours, minutes, seconds, finished } = useCountdown(EVENT.targetISO)
 
   return (
-    <section className="relative mt-24">
+    <section className="relative mt-24 px-4 sm:px-6">
       <HopMascot src="/images/reyleon6.webp" className="-top-16 left-1 sm:left-6" flip delay="400ms" />
       <SectionHeader
         badge="Cuenta regresiva"
