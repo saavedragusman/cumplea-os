@@ -515,7 +515,7 @@ function useCountdown(targetISO) {
 function CountUnit({ value, label }) {
   return (
     <div className="flex flex-col items-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-maroon to-rockspray font-display text-3xl font-bold text-psychedelic shadow-lg shadow-maroon/30 tabular-nums sm:h-24 sm:w-24 sm:text-4xl">
+      <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-maroon to-rockspray font-display text-2xl font-bold text-psychedelic shadow-lg shadow-maroon/30 tabular-nums sm:h-24 sm:w-24 sm:rounded-2xl sm:text-4xl">
         {String(value).padStart(2, '0')}
       </div>
       <span className="mt-2 font-display text-xs font-semibold uppercase tracking-widest text-rockspray sm:text-sm">
@@ -543,13 +543,13 @@ function Countdown() {
             ¡Hoy es el gran día! 🎉🦁
           </p>
         ) : (
-          <div className="mt-10 flex items-center justify-center gap-3 sm:gap-5">
+          <div className="mt-10 flex items-center justify-center gap-1.5 sm:gap-5">
             <CountUnit value={days} label="Días" />
-            <span className="pb-6 font-display text-3xl font-bold text-cadmium">:</span>
+            <span className="pb-4 font-display text-xl font-bold text-cadmium sm:pb-6 sm:text-3xl">:</span>
             <CountUnit value={hours} label="Horas" />
-            <span className="pb-6 font-display text-3xl font-bold text-cadmium">:</span>
+            <span className="pb-4 font-display text-xl font-bold text-cadmium sm:pb-6 sm:text-3xl">:</span>
             <CountUnit value={minutes} label="Min" />
-            <span className="pb-6 font-display text-3xl font-bold text-cadmium">:</span>
+            <span className="pb-4 font-display text-xl font-bold text-cadmium sm:pb-6 sm:text-3xl">:</span>
             <CountUnit value={seconds} label="Seg" />
           </div>
         )}
