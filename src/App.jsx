@@ -354,7 +354,7 @@ function SavannaVideo() {
         <video
           ref={videoRef}
           className="h-[58vw] max-h-[440px] min-h-[230px] w-full object-cover"
-          poster="/images/leon1.webp"
+          poster="/images/poster.webp"
           autoPlay
           muted
           loop
@@ -362,7 +362,7 @@ function SavannaVideo() {
           aria-label="Video del pequeño rey en la sabana"
         >
           {shouldLoad && (
-            <source src="/images/leon.mp4" type="video/mp4" />
+            <source src="/images/leoncito.mp4" type="video/mp4" />
           )}
         </video>
         {/* Warm savanna color grade */}
