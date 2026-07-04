@@ -324,6 +324,27 @@ const featherMask =
   'linear-gradient(to bottom, transparent 0%, #000 16%, #000 84%, transparent 100%)'
 
 function SavannaVideo() {
+  const videoRef = useRef(null)
+  const [shouldLoad, setShouldLoad] = useState(false)
+
+  useEffect(() => {
+    const el = videoRef.current
+    if (!el) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoad(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '300px' },
+    )
+
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <Reveal delay={120} className="relative left-1/2 mt-14 w-screen -translate-x-1/2">
       <div
@@ -331,16 +352,19 @@ function SavannaVideo() {
         style={{ WebkitMaskImage: featherMask, maskImage: featherMask }}
       >
         <video
+          ref={videoRef}
           className="h-[58vw] max-h-[440px] min-h-[230px] w-full object-cover"
-          src="/images/leon.mp4"
           poster="/images/leon1.webp"
           autoPlay
           muted
           loop
           playsInline
-          preload="metadata"
           aria-label="Video del pequeño rey en la sabana"
-        />
+        >
+          {shouldLoad && (
+            <source src="/images/leon.mp4" type="video/mp4" />
+          )}
+        </video>
         {/* Warm savanna color grade */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-willpower/25 via-transparent to-cadmium/15 mix-blend-multiply" />
         {/* Edge vignette for cinematic depth */}
